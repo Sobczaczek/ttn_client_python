@@ -1,0 +1,6 @@
+url: https://{network_cluster}/api/v3/applications/{app_id}/....
+
+Required:
+- API key
+- app_id
+- network_cluster
