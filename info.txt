@@ -4,3 +4,10 @@ Required:
 - API key
 - app_id
 - network_cluster
+
+
+
+'IS_URL': f"https://eu1.cloud.thethings.network/api/v3/applications/{APP_NAME}/devices",
+'JS_URL': f"https://eu1.cloud.thethings.network/api/v3/js/applications/{APP_NAME}/devices",
+'NS_URL': f"https://eu1.cloud.thethings.network/api/v3/ns/applications/{APP_NAME}/devices",
+'AS_URL': f"https://eu1.cloud.thethings.network/api/v3/as/applications/{APP_NAME}/devices",
