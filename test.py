@@ -33,5 +33,11 @@ client = TTN_client(network_cluster, ttn, app_id, api_key, app_key)
 # response = client.register_AS("second-end-device", "70B3D57ED0069759", "0000000000000000")
 # print(response, response.json())
 
+
+
 response = client.otaa("second-end-device", "70B3D57ED0069759", "0000000000000000")
 print(response, response.json())
+
+response = client.delete_end_device("second-end-device")
+print(response, response.json())
+
