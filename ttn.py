@@ -180,3 +180,50 @@ class TTN_client:
     
     def delete_AS(self, device_id: str):
         pass
+    
+    
+    def register_new_device(self, device_id: str, dev_eui: str, join_eui: str, lorawan_version="1.0.2", lorawan_phy_version="1.0.2-b", frequency_plan_id="EU_863_870_TTN"):
+        response = self.register_IS(device_id, dev_eui, join_eui)
+        status = response.status_code
+        
+        if not status == 200:
+            print("Error IS")
+            return response
+        
+        response = self.register_JS(device_id, dev_eui, join_eui)
+        status = response.status_code
+        
+        if not status == 200:
+            print("Error JS")
+            # delete IS
+            
+            return response
+        
+        response = self.register_NS(device_id, dev_eui, join_eui, lorawan_version, lorawan_phy_version, frequency_plan_id)
+        status = response.status_code
+        
+        if not status == 200:
+            print("Error NS")
+            # delete JS
+            
+            # delete IS
+            
+            return response
+        
+        response = self.register_AS(device_id, dev_eui, join_eui)
+        status = response.status_code
+
+        if not status == 200:
+            print("Error JS")
+            # delete NS
+            
+            # delete JS
+            
+            # delete IS
+            
+            return response
+        
+        print("Success")
+        return response      
+        
+         
