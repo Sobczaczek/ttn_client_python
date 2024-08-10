@@ -1,23 +1,67 @@
 import requests
 import json
 import logging
+from enum import Enum
+from typing import Literal
+
+__all__ = ['TTN_client']
 
 logging.basicConfig(level=logging.INFO,  # Set the logging level
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Set the logging format
                     handlers=[logging.StreamHandler()]) 
 
+
 class TTN_client:
+    
+    class NETWORK_CLUSTER:
+        EU1 = "eu1"
+        NAM1 = "nam1"
+        AU1 = "au1"
+        ALL = (EU1, NAM1, AU1)
+
+    class VERSION:
+        V2 = "v2"
+        V3 = "v3"
+        ALL = (V2, V3)
+
     def __init__(self, network_cluster: str, ttn_version: str, app_id: str, api_key: str, app_key: str):
-        self.app_key = app_key
+        """Init new class instance object.
+
+        Args:
+            network_cluster (str): can be passed as string or TTN_Client.NETWORK_CLUSTER.<()>
+            ttn_version (str): can be passed as string or TTN_Client.VERSION.<()>
+            app_id (str): unique application identifier
+            api_key (str): api key for access
+            app_key (str): ...
+
+        Raises:
+            ValueError: if network_cluster string is incorect
+            ValueError: if version string is incorect
+        """
+        # validate network cluster
+        if network_cluster not in self.NETWORK_CLUSTER.ALL:
+            raise ValueError(f"Invalid network cluster: {network_cluster}. Options: {', '.join(self.NETWORK_CLUSTER.ALL)}.")
+        self.network_cluster = f"{network_cluster}.cloud.thethings.network"
+        
+        # validate TTN Version
+        if ttn_version not in self.VERSION.ALL:
+            raise ValueError(f"Invalid version: {ttn_version}. Options: {', '.join(self.VERSION.ALL)}.")
         self.version = ttn_version
+
+        # assign other attributes
+        self.app_key = app_key
         self.app_id = app_id
         self.api_key = api_key
-        self.network_cluster = network_cluster
-        self.base_url = f"https://{network_cluster}/api/{ttn_version}/"
+        self.base_url = f"https://{self.network_cluster}/api/{self.version}/"
         self.headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
+        
+        
+    def info(self):
+        return vars(self)
+    
     
     def get_devices(self) -> requests.Response.json:
         """GET device list from TTN.
