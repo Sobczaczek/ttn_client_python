@@ -1,4 +1,5 @@
-from ttn import TTN_client
+import unittest
+from ttn_client import TTN_client
 
 ttn = "v3"
 ttn = TTN_client.VERSION.V3
@@ -10,12 +11,12 @@ api_key = "NNSXS.BQYNOFOCDRBYAPXIJFJRHKFQOR6YGTFVQJDNV5A.MAYM5YPUBIRJIEOOL2XLJI6
 app_key = "4868DC1E6296C0A329A2287BF06B5BA9"
 
 client = TTN_client(network_cluster, ttn, app_id, api_key, app_key)
-print(client.list_attributes())
+print(client.info())
 print(client)
 
-# print("GET Devices:")
-# response = client.get_devices()
-# print(response)
+print("GET Devices:")
+response = client.get_devices()
+print(response)
 
 # print("GET device by id")
 # device_id = "first-end-device"
