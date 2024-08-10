@@ -36,9 +36,8 @@ class TTN_client:
         ALL = (EU1, NAM1, AU1)
 
     class VERSION:
-        V2 = "v2"
         V3 = "v3"
-        ALL = (V2, V3)
+        ALL = (V3)
 
     def __init__(self, network_cluster: str, ttn_version: str, app_id: str, api_key: str, app_key: str):
         """Init new class instance object.
@@ -84,8 +83,8 @@ class TTN_client:
         return vars(self)
     
     
-    def get_devices(self) -> requests.Response.json:
-        """GET device list from TTN.
+    def devices(self) -> requests.Response.json:
+        """GET end-device list registered on Identity Server.
 
         Returns:
             requests.Response.json: list of end-devices, JSON Object
@@ -96,7 +95,7 @@ class TTN_client:
         return response.json()
     
     
-    def get_device(self, device_id: str) -> requests.Response.json:
+    def device(self, device_id: str) -> requests.Response.json:
         """_summary_
 
         Args:
@@ -111,7 +110,7 @@ class TTN_client:
         return response.json()
     
         
-    def register_IS(self, device_id: str, dev_eui: str, join_eui: str) -> requests.Response:
+    def __register_IS(self, device_id: str, dev_eui: str, join_eui: str) -> requests.Response:
         """_summary_
 
         Args:
@@ -149,14 +148,14 @@ class TTN_client:
         return response
     
     
-    def delete_IS(self, device_id: str) -> requests.Response:
+    def __delete_IS(self, device_id: str) -> requests.Response:
         
         url = f"{self.base_url}applications/{self.app_id}/devices/{device_id}"
         response = requests.delete(url, headers=self.headers)
         return response
 
 
-    def register_JS(self, device_id: str, dev_eui: str, join_eui: str):
+    def __register_JS(self, device_id: str, dev_eui: str, join_eui: str):
         data = {
             "end_device": {
                 "ids": {
@@ -189,14 +188,14 @@ class TTN_client:
         return response
     
     
-    def delete_JS(self, device_id: str):
+    def __delete_JS(self, device_id: str):
         
         url = f"{self.base_url}js/applications/{self.app_id}/devices/{device_id}"
         response = requests.delete(url, headers=self.headers)
         return response
     
     
-    def register_NS(self, device_id: str, dev_eui: str, join_eui: str, lorawan_version="1.0.2", lorawan_phy_version="1.0.2-b", frequency_plan_id="EU_863_870_TTN"):
+    def __register_NS(self, device_id: str, dev_eui: str, join_eui: str, lorawan_version="1.0.2", lorawan_phy_version="1.0.2-b", frequency_plan_id="EU_863_870_TTN"):
         data = {
             "end_device": {
                 "supports_join": True,
@@ -227,23 +226,27 @@ class TTN_client:
         return response
     
     
-    def delete_NS(self, device_id: str):
+    def __delete_NS(self, device_id: str):
         url = f"{self.base_url}ns/applications/{self.app_id}/devices/{device_id}"
         response = requests.delete(url, headers=self.headers)
         return response
 
     
-    def register_AS(self, device_id: str, dev_eui: str, join_eui: str):
+    def __register_AS(self, device_id: str, dev_eui: str, join_eui: str):
         data = {
             "end_device": {
                 "ids": {
-                "device_id": device_id,
-                "dev_eui": dev_eui,
-                "join_eui": join_eui
+                    "device_id": device_id,
+                    "dev_eui": dev_eui,
+                    "join_eui": join_eui
                 }
             },
             "field_mask": {
-                "paths": ["ids.device_id", "ids.dev_eui", "ids.join_eui"]
+                "paths": [
+                    "ids.device_id",
+                    "ids.dev_eui",
+                    "ids.join_eui"
+                ]
             }
         }
         url = f"{self.base_url}as/applications/{self.app_id}/devices/{device_id}"
@@ -251,7 +254,7 @@ class TTN_client:
         # response.raise_for_status()
         return response
     
-    def delete_AS(self, device_id: str):
+    def __delete_AS(self, device_id: str):
         url = f"{self.base_url}as/applications/{self.app_id}/devices/{device_id}"
         response = requests.delete(url, headers=self.headers)
         return response
@@ -305,40 +308,41 @@ class TTN_client:
         
         try:
             logging.info("Create device on the Identity Server")
-            response = self.register_IS(device_id, dev_eui, join_eui)
+            response = self.__register_IS(device_id, dev_eui, join_eui)
             if not self.__check_response(response, "Identity Server"):
                 return response
 
             logging.info("Create device on the Join Server")
-            response = self.register_JS(device_id, dev_eui, join_eui)
+            response = self.__register_JS(device_id, dev_eui, join_eui)
             if not self.__check_response(response, "Join Server"):
-                return self.__delete_device_sequence(device_id, [("Identity Server", self.delete_IS)])
+                return self.__delete_device_sequence(device_id, [("Identity Server", self.__delete_IS)])
 
             logging.info("Create device on the Network Server")
-            response = self.register_NS(device_id, dev_eui, join_eui, lorawan_version, lorawan_phy_version, frequency_plan_id)
+            response = self.__register_NS(device_id, dev_eui, join_eui, lorawan_version, lorawan_phy_version, frequency_plan_id)
             if not self.__check_response(response, "Network Server"):
-                return self.__delete_device_sequence(device_id, [("Join Server", self.delete_JS), ("Identity Server", self.delete_IS)])
+                return self.__delete_device_sequence(device_id, [("Join Server", self.__delete_JS), ("Identity Server", self.__delete_IS)])
 
             logging.info("Create device on the Application Server")
-            response = self.register_AS(device_id, dev_eui, join_eui)
+            response = self.__register_AS(device_id, dev_eui, join_eui)
             if not self.__check_response(response, "Application Server"):
-                return self.__delete_device_sequence(device_id, [("Network Server", self.delete_NS), ("Join Server", self.delete_JS), ("Identity Server", self.delete_IS)])
-
-            logging.info(f"Device `{device_id}` created successfully!")
-            return response
+                return self.__delete_device_sequence(device_id, [("Network Server", self.__delete_NS), ("Join Server", self.__delete_JS), ("Identity Server", self.__delete_IS)])
         
         except Exception as err:
             logging.error(f"Exception occurred: {err}")
             return response if 'response' in locals() else None
+        
+        else:
+            logging.info(f"Device `{device_id}` created successfully!")
+            return response
 
         
-    def delete_end_device(self, device_id: str) -> requests.Response:
+    def delete_device(self, device_id: str) -> requests.Response:
         
         delete_steps = [
-            ("Application Server", self.delete_AS),
-            ("Network Server", self.delete_NS), 
-            ("Join Server", self.delete_JS), 
-            ("Identity Server", self.delete_IS)
+            ("Application Server", self.__delete_AS),
+            ("Network Server", self.__delete_NS), 
+            ("Join Server", self.__delete_JS), 
+            ("Identity Server", self.__delete_IS)
         ]
         
         return self.__delete_device_sequence(device_id, delete_steps) 

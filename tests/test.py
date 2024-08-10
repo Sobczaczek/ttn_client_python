@@ -1,50 +1,39 @@
 import unittest
 from ttn_client import TTN_client
+from secret import SECRET
 
-ttn = "v3"
-ttn = TTN_client.VERSION.V3
-network_cluster = "eu1"
-network_cluster = TTN_client.NETWORK_CLUSTER.EU1
-# network_cluster = TTN_client.NETWORK_CLUSTER.EU1
-app_id = "python-dev-management"
-api_key = "NNSXS.BQYNOFOCDRBYAPXIJFJRHKFQOR6YGTFVQJDNV5A.MAYM5YPUBIRJIEOOL2XLJI6GY5WCKP6GSYUOJDMMNG64WH2B26MQ"
-app_key = "4868DC1E6296C0A329A2287BF06B5BA9"
+# EXAMPLE: 
+# Client configuration
+ttn_version = "v3" # string
+ttn_version = TTN_client.VERSION.V3 # predefined string
 
-client = TTN_client(network_cluster, ttn, app_id, api_key, app_key)
-print(client.info())
-print(client)
+network_cluster = "eu1" # string
+network_cluster = TTN_client.NETWORK_CLUSTER.EU1 # predefined string
 
-print("GET Devices:")
-response = client.get_devices()
-print(response)
+# Secret parameters
+app_id = SECRET["app_id"]
+api_key = SECRET["api_key"]
+app_key = SECRET["app_key"]
 
-# print("GET device by id")
-# device_id = "first-end-device"
-# response = client.get_device(device_id)
-# print(response)
+# Client initialization
+client = TTN_client(network_cluster, ttn_version, app_id, api_key, app_key)
 
-# print("Delete end-device from IS: \n\n")
-# response = client.delete_IS("second-end-device")
-# print(response)
+# Display Client configuration
+print(f"TTN Client: \n {client.info()}")
 
-# response = client.register_IS("second-end-device", "70B3D57ED0069759", "0000000000000000")
-# print(response, response.json())
+# Client devices
+print(f"GET devices: \n {client.devices()}")
 
-# response = client.register_JS("second-end-device", "70B3D57ED0069759", "0000000000000000")
-# print(response, response.json())
+# Get device by device_id
+print(f"DEVICE: \n {client.device("first-end-device")}")
 
-# response = client.register_NS("second-end-device", "70B3D57ED0069759", "0000000000000000")
-# print(response, response.json())
+# Register new device: OTAA
+test_dev_id = "second-end-device"
+test_dev_eui = SECRET["dev_eui"]
+response = client.otaa(test_dev_id, test_dev_eui, "0000000000000000")
+print(f"OTAA: \n {response} \n {response.json()}")
 
-# response = client.register_AS("second-end-device", "70B3D57ED0069759", "0000000000000000")
-# print(response, response.json())
+# Delete device from application
+response = client.delete_device(test_dev_id)
+print(f"Device deletion: \n {response}")
 
-
-
-# response = client.otaa("second-end-device", "70B3D57ED0069759", "0000000000000000")
-# print(response, response.json())
-# 
-# response = client.delete_end_device("second-end-device")
-# print(response, response.json())
-
-# client.api_key = "s"
